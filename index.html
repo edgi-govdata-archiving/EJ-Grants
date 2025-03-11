@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>USEPA EJ Grants Under IRA</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #textDiv{
+        padding: 5px;
+        margin: 5px;
+        height: 100%;
+        width: 50%;
+      }
+
+      #seasons-filter {
+        height: 200px;
+        width: 100%;
+        visibility: hidden;
+      }
+
+      .season-item {
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        vertical-align: baseline;
+        cursor: pointer;
+        height: 40px;
+      }
+
+      .season-item:focus {
+        background-color: dimgrey;
+      }
+
+      .season-item:hover {
+        background-color: dimgrey;
+      }
+
+      #titleDiv {
+        padding: 10px;
+      }
+
+      #titleText {
+        font-size: 20pt;
+        font-weight: 60;
+        padding-bottom: 10px;
+      }
+    </style>
+    <script>
+      require([
+        "esri/views/MapView",
+        "esri/Map",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Expand",
+        "esri/core/reactiveUtils"
+      ], (MapView, Map, FeatureLayer, Expand, reactiveUtils) => {
+        let floodLayerView;
+
+        // flash flood warnings layer
+        const layer = new FeatureLayer({
+          portalItem: {
+            id: "6ec4f16b6f334cedab28bb7c585ff410"
+          },
+          outFields: ["*"],
+         
+        });
+
+        const map = new Map({
+          layers: [layer],
+          basemap: "gray-vector",
+        });
+
+        const view = new MapView({
+          map: map,
+          container: "viewDiv",
+          center: [-98, 40],
+          zoom: 4
+        });
+
+        const seasonsNodes = document.querySelectorAll(`.season-item`);
+        const seasonsElement = document.getElementById("seasons-filter");
+
+        // click event handler for seasons choices
+        seasonsElement.addEventListener("click", filterBySeason);
+
+        // User clicked on Winter, Spring, Summer or Fall
+        // set an attribute filter on flood warnings layer view
+        // to display the warnings issued in that season
+        function filterBySeason(event) {
+          const selectedSeason = event.target.getAttribute("data-season");
+          floodLayerView.filter = {
+            where: " Program = '" + selectedSeason + "'"
+          };
+        }
+
+        view.whenLayerView(layer).then((layerView) => {
+          // flash flood warnings layer loaded
+          // get a reference to the flood warnings layerview
+          floodLayerView = layerView;
+
+          // set up UI items
+          seasonsElement.style.visibility = "visible";
+          const seasonsExpand = new Expand({
+            view: view,
+            content: seasonsElement,
+            expandIcon: "filter",
+            group: "top-left"
+          });
+          //clear the filters when user closes the expand widget
+          reactiveUtils.when(
+            () => !seasonsExpand.expanded,
+            () => {
+              floodLayerView.filter = null;
+            }
+          );
+          view.ui.add(seasonsExpand, "top-left");
+          view.ui.add("titleDiv", "top-right");
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="seasons-filter" class="esri-widget">
+      <div class="season-item visible-season" data-season="Environmental Justice Collaborative Problem Solving">Collaborative Problem Solving</div>
+      <div class="season-item visible-season" data-season="Environmental Justice Community Change Grants">Community Change Grants</div>
+      <div class="season-item visible-season" data-season="Environmental Justice Government-to-Government">Government-to-Government</div>
+      <div class="season-item visible-season" data-season="Fenceline Monitoring">Fenceline Monitoring</div>
+      <div class="season-item visible-season" data-season="Environmental Justice Collaborative Problem-Solving Cooperative Agreement Program"> Collaborative Problem-Solving Cooperative Agreement Program</div>
+      
+    </div>
+    <div id="viewDiv"></div>
+    <div id="titleDiv" class="esri-widget">
+      <div id="titleText">USEPA EJ Grants</div>
+      <div>IRA</div>
+    </div>
+  </body>
+</html>
