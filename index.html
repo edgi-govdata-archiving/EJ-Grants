@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+  <!--Heavily indebted to https://developers.arcgis.com/javascript/latest/sample-code/featurefilter-attributes/-->
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
@@ -15,37 +16,23 @@
       html,
       body,
       #viewDiv {
-        padding: 5px;
-        margin: 5px;
+        padding: 2px;
+        margin: 2px;
         height: 100%;
         width: 100%;
       }
 
-      /* #seasons-filter {
-        height: 200px;
-        width: 100%;
-        visibility: hidden;
+      #resultsDiv {
+        padding: 10px;
       }
 
-      .season-item {
-        width: 100%;
-        padding: 12px;
-        text-align: center;
-        vertical-align: baseline;
-        cursor: pointer;
-        height: 40px;
+      #resultsText {
+        font-size: 16pt;
+        font-weight: 60;
+        padding-bottom: 10px;
       }
-
-      .season-item:focus {
-        background-color: dimgrey;
-      }
-
-      .season-item:hover {
-        background-color: dimgrey;
-      } */
-
-      .test{
-        height: 90vh;
+      .view {
+        height: 95vh;
       }
     </style>
     <script>
@@ -80,126 +67,163 @@
           zoom: 4
         });
 
-        const searchWidget = new Search({
-            view: view,
-            popupEnabled: false,
-        });
-        // Adds the search widget below other elements in
-        // the top left corner of the view
-        view.ui.add(searchWidget, {
+        // see here for example of attribute search: https://developers.arcgis.com/javascript/latest/sample-code/widgets-search-multiplesource/
+        const searchGrant = new Search({
+          view: view,
+          popupEnabled: false,
+          //allPlaceholder: "Search by Grant or Location", 
+          includeDefaultSources: true,
+/*           sources: [
+            {
+              layer: layer,
+              searchFields: ["Project_Title", "Project_Description"],
+              //displayField: "Project Description",
+              exactMatch: false,
+              outFields: ["Recipient", "Project_Title", "Project_Description"],
+              name: "Grants",
+              placeholder: "Example: energy efficiency"
+            },
+            
+          ] */
+          })
+        view.ui.add(searchGrant, {
             position: "top-left",
             index: 0
         });
 
-        //const seasonsNodes = document.querySelectorAll(`.season-item`);
-        const seasonsElement = document.getElementById("seasons-filter");
 
-        // click event handler for seasons choices
-        seasonsElement.addEventListener("click", filterBySeason);
+        // click event handler 
+        const grantsElement = document.getElementById("grants-filter");
+        grantsElement.addEventListener("click", filterByGrant);
 
-        // User clicked on Winter, Spring, Summer or Fall
-        // set an attribute filter on flood warnings layer view
-        // to display the warnings issued in that season
-        function filterBySeason(event) {
+        // User clicked
+        function filterByGrant(event) {
           console.log(event)
-          const selectedSeason = event.target.getAttribute("data-season");
-          console.log(selectedSeason)
-          if (selectedSeason == "All EJ Grants"){
-            floodLayerView.filter = null;
-          } else {
-            floodLayerView.filter = {
-            where: " Program = '" + selectedSeason + "'"
-          };
+          const selectedGrant = event.target.getAttribute("data-grant");
+          if (selectedGrant) { // handle null events happening
+            console.log(selectedGrant)
+            if (selectedGrant == "All EJ Grants"){
+              grantsLayerView.filter = null;
+            } else if (selectedGrant == "Environmental Justice Collaborative Problem Solving") {
+              let queryTitle = "Environmental Justice Collaborative%"// hack to combine two CPS grant names
+              grantsLayerView.filter = {
+                where: " Program like '" + queryTitle + "'" // like here to handle CSP
+              } 
+            } else{
+              grantsLayerView.filter = {
+                where: " Program = '" + selectedGrant + "'"
+              } 
+            }
+            
+            // query stats. see: https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-support-StatisticDefinition.html#statisticType
+            let sumGrants = {
+              onStatisticField: "Award_Amount",
+              outStatisticFieldName: "Award_Amount_sum",
+              statisticType: "sum"
+            }
+            let avgGrants = {
+              onStatisticField: "Award_Amount",
+              outStatisticFieldName: "Award_Amount_avg",
+              statisticType: "avg"
+            }
+            let countGrants = {
+              onStatisticField: "Recipient",
+              outStatisticFieldName: "Recipient_count",
+              statisticType: "count"
+            }
+            let query = grantsLayerView.createQuery();
+            query.outStatistics = [ sumGrants, avgGrants, countGrants ];
+            grantsLayerView.queryFeatures(query)
+              .then(function(response){
+                let stats = response.features[0].attributes;
+                //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#currency_formatting
+                document.getElementById("resultsText").innerHTML = event.srcElement.labels[0].innerText;
+                const sum = new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(stats["Award_Amount_sum"])
+                document.getElementById("totalAwarded").innerHTML = "Total awarded: " + sum;
+                const avg = new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(stats["Award_Amount_avg"])
+                document.getElementById("avgAwarded").innerHTML = "Average award: " + avg;
+                document.getElementById("numGrants").innerHTML = "Number of grants: " + stats["Recipient_count"].toString();
+              });
           }
-          
+
         }
 
         view.whenLayerView(layer).then((layerView) => { 
           // flash flood warnings layer loaded
           // get a reference to the flood warnings layerview
-          floodLayerView = layerView;
-
-          // set up UI items
-          /*
-          seasonsElement.style.visibility = "visible";
-          const seasonsExpand = new Expand({
-            view: view,
-            content: seasonsElement,
-            expandIcon: "filter",
-            group: "top-left"
-          });
-          //clear the filters when user closes the expand widget
-          reactiveUtils.when(
-            () => !seasonsExpand.expanded,
-            () => {
-              floodLayerView.filter = null;
-            }
-          );
-          view.ui.add(seasonsExpand, "top-left");
-          view.ui.add("titleDiv", "top-right");
-          */
+          grantsLayerView = layerView;
+          view.ui.add("resultsDiv", "bottom-left");
+         
         }); 
       });
     </script>
   </head>
 
   <body>
-    <!-- <div id="seasons-filter" class="esri-widget">
-      <div class="season-item visible-season" data-season="Environmental Justice Collaborative Problem Solving">Collaborative Problem Solving</div>
-      <div class="season-item visible-season" data-season="Environmental Justice Community Change Grants">Community Change Grants</div>
-      <div class="season-item visible-season" data-season="Environmental Justice Government-to-Government">Government-to-Government</div>
-      <div class="season-item visible-season" data-season="Fenceline Monitoring">Fenceline Monitoring</div>
-      <div class="season-item visible-season" data-season="Environmental Justice Collaborative Problem-Solving Cooperative Agreement Program"> Collaborative Problem-Solving Cooperative Agreement Program</div>
-      
-    </div> -->
     
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-8 test">
+            <div class="col-md-8 view">
                 <div id="viewDiv"></div>
+                <div id="resultsDiv" class="esri-widget">
+                  <div id="resultsText">All EJ Grants</div>
+                  <div id="totalAwarded">Total awarded: $2,427,575,579</div>
+                  <div id="avgAwarded">Average award: $7,633,885.47</div>
+                  <div id="numGrants">Number of grants: 318</div>
+                </div>
             </div>
             <div class="col-md-4">
-                <h1 class="display-6">USEPA EJ Grants</h1>
-                <p class="lead">Made under IRA</p>
+                <h4>US Environmental Protection Agency Environmental Justice Grants</h4>
+                <p class="lead">Awarded under the Inflation Reduction Act</p>
 
 
-                <div class="btn-group-vertical" id="seasons-filter" role="group" aria-label="Vertical radio toggle button group">
+                <div class="btn-group-vertical" id="grants-filter" role="group" aria-label="Vertical radio toggle button group">
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" 
-                    data-season="All EJ Grants" autocomplete="off" checked>
+                    data-grant="All EJ Grants" autocomplete="off" checked>
                     <label class="btn btn-secondary" for="vbtn-radio1">All EJ Grants</label>
                     
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2" 
-                    data-season="Environmental Justice Collaborative Problem Solving" autocomplete="off">
+                    data-grant="Environmental Justice Collaborative Problem Solving" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio2">Collaborative Problem Solving</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio3" 
-                    data-season="Environmental Justice Collaborative Problem-Solving Cooperative Agreement Program" autocomplete="off">
+                    <!-- <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio3" 
+                    data-grant="Environmental Justice Collaborative Problem-Solving Cooperative Agreement Program" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio3">Collaborative Problem Solving Cooperative Agreement Program</label>
-                    
+ -->                    
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio4" 
-                    data-season="Environmental Justice Community Change Grants" autocomplete="off">
+                    data-grant="Environmental Justice Community Change Grants" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio4">Community Change Grants</label>
 
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio5" 
-                    data-season="Environmental Justice Government-to-Government" autocomplete="off">
+                    data-grant="Environmental Justice Government-to-Government" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio5">Government-to-Government</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio6" 
-                    data-season="Fenceline Monitoring" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio6">Fenceline Monitoring</label>
-
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio7" 
-                    data-season="Environmental Justice Thriving Communities Grantmaking" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio7">Thriving Communities Grantmaking</label>
+                    data-grant="Environmental Justice Thriving Communities Grantmaking" autocomplete="off">
+                    <label class="btn btn-secondary" for="vbtn-radio7">EJ Grantmakers</label>
+
+                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio6" 
+                    data-grant="Supplemental Funding for Thriving Communities Technical Assistance Centers (TCTACs) to coordinate and collaborate with the EJ Thriving Communities Grantmakers and/or provide technical assistance to applicants and subgrantee recipients of Grantmaker program." autocomplete="off">
+                    <label class="btn btn-secondary" for="vbtn-radio6">Thriving Communities Technical Assistance Centers (TCTACs)</label>
 
                     <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio8" 
-                    data-season="Financial Assistance For Community Support Activities To Address Environmental Justice Issues" autocomplete="off">
+                    data-grant="Financial Assistance For Community Support Activities To Address Environmental Justice Issues" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio8">Financial Assistance For Community Support Activities</label>
                     
                 </div>
 
                 <div>
-                    <br><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                  <br><p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="https://screening-tools.com/" target="_blank">Public Environmental Data Partners</a>. The original data source for this map is archived <a href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx" target="_blank">here</a>. Some links and text may incorrectly suggest that this site is affiliated with the US Government.</p>
+                  <p>This map is not comprehensive and will be updated periodically as additional information becomes available.</p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
                         About the Data
                     </button>
                 </div>
@@ -213,7 +237,10 @@
                           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                          <p>These data depict the primary place of performance only for select EPA projects and highlights a subset of all investments made under the Bipartisan Infrastructure Law and the Inflation Reduction Act. Both primary and sub-award information is included; however, funding amounts are not displayed for sub-awards / projects. Locations indicated here are determined using a variety of methods and may not correspond precisely to an exact, physical location. This map is not comprehensive and will be updated periodically as additional information becomes available including sub-award grant data. 
+                          <p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="screening-tools.com" target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest that this site is affiliated with the US Government.</p>
+                          <p>Below is how the data are described in their original source <a href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx" target="_blank">here</a>:</p>
+
+                          <p>These data depict the primary place of performance only for select EPA projects and highlights a subset of all investments made under the Bipartisan Infrastructure Law and the Inflation Reduction Act. Both primary and sub-award information is included; however, funding amounts are not displayed for sub-awards / projects. Locations indicated here are determined using a variety of methods and may not correspond precisely to an exact, physical location. This map is not comprehensive and will be updated periodically as additional information becomes available including sub-award grant data. </p>
         
                             <h6>Data Caveats</h6>
                             <ol type="1">
@@ -224,13 +251,13 @@
                                     This data visualization does not include information about regularly appropriated EPA program dollars, only EPA Bipartisan Infrastructure Law and Inflation Reduction Act funding.
                                 </li>
                                 <li>
-                                    In the case of EPA’s Office of Air & Radiation grants, it is important to note cases where the dot on the map is just an approximation: (a) Where one grant is funding the purchase of multiple vehicles, operating in multiple locations, the one dot must represent dozens of actual places of performance. For example, under the Clean School Bus program, if a third-party applicant includes 10 school districts, each funding 2 buses, the dot associated with that participant may actually represent ten distinct places of performance. (b) Similarly, for the Diesel Emissions Reduction Act (DERA), a single grant, represented by a single dot on the map could fund one crane at an airport and five heavy-duty buses, each operating in multiple counties.  (c) Additionally, the dot on the map sometimes represents the address of the grantee instead of the place of performance or where the vehicles will be operating. ﻿
+                                    In the case of EPA’s Office of Air & Radiation grants, it is important to note cases where the dot on the map is just an approximation: (a) Where one grant is funding the purchase of multiple vehicles, operating in multiple locations, the one dot must represent dozens of actual places of performance. For example, under the Clean School Bus program, if a third-party applicant includes 10 school districts, each funding 2 buses, the dot associated with that participant may actually represent ten distinct places of performance. (b) Similarly, for the Diesel Emissions Reduction Act (DERA), a single grant, represented by a single dot on the map could fund one crane at an airport and five heavy-duty buses, each operating in multiple counties.  (c) Additionally, the dot on the map sometimes represents the address of the grantee instead of the place of performance or where the vehicles will be operating. 
                                 </li>
                             </ol>        
                             <h6>Data Source Information</h6>
-                            Apart from a few programs, these data are updated daily in accordance with new award information entered into EPA's NextGen Grants Systems (NGGS). Superfund, Clean School Bus, and a few other programs have their data sourced directly from the programs on a less than daily basis. Reach out to dmap@epa.gov with questions about the API.
+                            Apart from a few programs, these data are updated daily in accordance with new award information entered into EPA's NextGen Grants Systems (NGGS). Superfund, Clean School Bus, and a few other programs have their data sourced directly from the programs on a less than daily basis.
         
-                            <p><br>With regards to point feature placement on the map, the NGGS system offers a robust interface allowing the project officer to map the place of performance by political boundary or natural feature (such as watershed). If a grant is having benefit over multiple places of performance, a project officer must choose a primary one and for that one the centroid is used to place the point on the map. In some cases, this centroid is a fair approximation of the place of benefit but in other cases, such as with grants addressing air quality, it can largely under-represent the actual benefited areas. For general questions about the application reach out to enviromail_group@epa.gov. 
+                            <p><br>With regards to point feature placement on the map, the NGGS system offers a robust interface allowing the project officer to map the place of performance by political boundary or natural feature (such as watershed). If a grant is having benefit over multiple places of performance, a project officer must choose a primary one and for that one the centroid is used to place the point on the map. In some cases, this centroid is a fair approximation of the place of benefit but in other cases, such as with grants addressing air quality, it can largely under-represent the actual benefited areas.
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
