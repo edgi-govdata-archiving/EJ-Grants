@@ -274,7 +274,7 @@
         </div>
 
 
-        <div class="modal" id="exampleModal" tabindex="-1">
+        <div class="modal" id="aboutModal" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
@@ -340,21 +340,42 @@
             </div>
           </div>
         </div>
+        <div class="modal" id="contactModal" tabindex="-2">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Get in Touch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="screening-tools.com"
+                    target="_blank">Public Environmental Data Partners</a>.
+                We'd love to hear from you! Please get in touch using <a href="https://uoguelph.eu.qualtrics.com/jfe/form/SV_cNGbNlth6OWiE8m" target="_blank">this form</a>. 
+                
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">
+
        <div>
         <br>
-        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#aboutModal">
           About the Data
         </button>
-        <button type="button" class="btn btn-primary btn-sm">
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#contactModal">
           Get in Touch
         </button>
         <small><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="https://screening-tools.com/"
             target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest that
           this site is affiliated with the US Government.</small>
       </div>
+      
 
     </div>
   </div>
