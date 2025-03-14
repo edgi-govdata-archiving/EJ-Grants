@@ -1,273 +1,363 @@
 <!doctype html>
 <html lang="en">
-  <!--Heavily indebted to https://developers.arcgis.com/javascript/latest/sample-code/featurefilter-attributes/-->
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-    <title>USEPA EJ Grants Under IRA</title>
+<!--Heavily indebted to https://developers.arcgis.com/javascript/latest/sample-code/featurefilter-attributes/-->
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>USEPA EJ Grants Under IRA</title>
 
-    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
-    <script src="https://js.arcgis.com/4.32/"></script>
-    
-    <style>
-      html,
-      body,
-      #viewDiv {
-        padding: 2px;
-        margin: 2px;
-        height: 100%;
-        width: 100%;
-      }
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
 
-      #resultsDiv {
-        padding: 10px;
-      }
+  <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.32/"></script>
 
-      #resultsText {
-        font-size: 16pt;
-        font-weight: 60;
-        padding-bottom: 10px;
-      }
-      .view {
-        height: 95vh;
-      }
-    </style>
-    <script>
-      require([
-        "esri/views/MapView",
-        "esri/Map",
-        "esri/layers/FeatureLayer",
-        "esri/widgets/Expand",
-        "esri/core/reactiveUtils",
-        "esri/widgets/Search"
-      ], (MapView, Map, FeatureLayer, Expand, reactiveUtils, Search) => {
-        let floodLayerView;
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 2px;
+      margin: 2px;
+      height: 100%;
+      width: 100%;
+    }
 
-        // flash flood warnings layer
-        const layer = new FeatureLayer({
-          portalItem: {
-            id: "6ec4f16b6f334cedab28bb7c585ff410"
-          },
-          outFields: ["*"],
-         
-        });
+    #resultsDiv {
+      padding: 10px;
+    }
 
-        const map = new Map({
-          layers: [layer],
-          basemap: "gray-vector",
-        });
+    #resultsText {
+      font-size: 16pt;
+      font-weight: 60;
+      padding-bottom: 10px;
+    }
 
-        const view = new MapView({
-          map: map,
-          container: "viewDiv",
-          center: [-98, 40],
-          zoom: 4
-        });
+    .view {
+      height: 95vh;
+    }
+  </style>
+  <script>
+    require([
+      "esri/views/MapView",
+      "esri/Map",
+      "esri/layers/FeatureLayer",
+      "esri/layers/GroupLayer",
+      "esri/widgets/Expand",
+      "esri/core/reactiveUtils",
+      "esri/widgets/Search"
+    ], (MapView, Map, FeatureLayer, GroupLayer, Expand, reactiveUtils, Search) => {
 
-        // see here for example of attribute search: https://developers.arcgis.com/javascript/latest/sample-code/widgets-search-multiplesource/
-        const searchGrant = new Search({
-          view: view,
-          popupEnabled: false,
-          //allPlaceholder: "Search by Grant or Location", 
-          includeDefaultSources: true,
-/*           sources: [
-            {
-              layer: layer,
-              searchFields: ["Project_Title", "Project_Description"],
-              //displayField: "Project Description",
-              exactMatch: false,
-              outFields: ["Recipient", "Project_Title", "Project_Description"],
-              name: "Grants",
-              placeholder: "Example: energy efficiency"
-            },
-            
-          ] */
-          })
-        view.ui.add(searchGrant, {
-            position: "top-left",
-            index: 0
-        });
+      const otherej = new FeatureLayer({
+        portalItem: {
+          id: "6ec4f16b6f334cedab28bb7c585ff410"
+        },
+        layerId: 0,
+        outFields: ["*"],
+
+      });
+
+      const tcgrants = new FeatureLayer({
+        portalItem: {
+          id: "6ec4f16b6f334cedab28bb7c585ff410"
+        },
+        layerId: 1,
+        outFields: ["*"],
+
+      });
+
+      //https://developers.arcgis.com/javascript/latest/api-reference/esri-layers-GroupLayer.html
+      const AllEJGrants = new GroupLayer({
+        title: "All EJ Grants",
+        visible: true,
+        layers: [tcgrants, otherej],
+      });
+
+      const map = new Map({
+        layers: [AllEJGrants],
+        basemap: "gray-vector",
+      });
+
+      const view = new MapView({
+        map: map,
+        container: "viewDiv",
+        center: [-98, 40],
+        zoom: 4
+      });
+
+      // see here for example of attribute search: https://developers.arcgis.com/javascript/latest/sample-code/widgets-search-multiplesource/
+      const searchGrant = new Search({
+        view: view,
+        popupEnabled: false,
+        //allPlaceholder: "Search by Grant or Location", 
+        includeDefaultSources: true,
+        /*           sources: [
+                    {
+                      layer: layer,
+                      searchFields: ["Project_Title", "Project_Description"],
+                      //displayField: "Project Description",
+                      exactMatch: false,
+                      outFields: ["Recipient", "Project_Title", "Project_Description"],
+                      name: "Grants",
+                      placeholder: "Example: energy efficiency"
+                    },
+                    
+                  ] */
+      })
+      view.ui.add(searchGrant, {
+        position: "top-left",
+        index: 0
+      });
 
 
-        // click event handler 
-        const grantsElement = document.getElementById("grants-filter");
-        grantsElement.addEventListener("click", filterByGrant);
 
-        // User clicked
-        function filterByGrant(event) {
-          console.log(event)
-          const selectedGrant = event.target.getAttribute("data-grant");
-          if (selectedGrant) { // handle null events happening
-            console.log(selectedGrant)
-            if (selectedGrant == "All EJ Grants"){
-              grantsLayerView.filter = null;
-            } else if (selectedGrant == "Environmental Justice Collaborative Problem Solving") {
-              let queryTitle = "Environmental Justice Collaborative%"// hack to combine two CPS grant names
-              grantsLayerView.filter = {
-                where: " Program like '" + queryTitle + "'" // like here to handle CSP
-              } 
-            } else{
-              grantsLayerView.filter = {
-                where: " Program = '" + selectedGrant + "'"
-              } 
+      // click event handler 
+      const grantsElement = document.getElementById("grants-filter");
+      grantsElement.addEventListener("click", filterByGrant);
+
+      // User clicked
+      function filterByGrant(event) {
+
+        const selectedGrant = event.target.getAttribute("data-grant");
+        if (selectedGrant) { // handle null events happening
+
+          view.allLayerViews.forEach((lv) => {
+            if (lv.layer.type === "feature") {
+
+              if (selectedGrant == "All EJ Grants") {
+                lv.filter = null;
+                document.getElementById("resultsText").innerHTML = selectedGrant;
+                document.getElementById("totalAwarded").innerHTML = "Total awarded: $2,427,575,579";
+                document.getElementById("avgAwarded").innerHTML = "Average award: $7,633,885.47";
+                document.getElementById("numGrants").innerHTML = "Number of grants: 318";
+                return;
+              } else if (selectedGrant == "Environmental Justice Collaborative Problem Solving") {
+                let queryTitle = "Environmental Justice Collaborative%"// hack to combine two CPS grant names
+                lv.filter = {
+                  where: " Program like '" + queryTitle + "'" // like here to handle CSP
+                }
+              } else {
+                lv.filter = {
+                  where: " Program = '" + selectedGrant + "'"
+                }
+              }
+
+              // Calculate stats see: https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-support-StatisticDefinition.html#statisticType
+              // Look up whether we need layerID 1 or 0 based on selectedGrant
+              // First, handle when we skip
+              if ((selectedGrant.includes("Thriving")) && (lv.layer.layerId == 0)) {
+                return;
+              }
+              if ((!selectedGrant.includes("Thriving")) && (!selectedGrant.includes("All EJ Grants")) && (lv.layer.layerId == 1)) {
+                return;
+              }
+              let sumGrants = {
+                onStatisticField: "Award_Amount",
+                outStatisticFieldName: "Award_Amount_sum",
+                statisticType: "sum"
+              }
+              let avgGrants = {
+                onStatisticField: "Award_Amount",
+                outStatisticFieldName: "Award_Amount_avg",
+                statisticType: "avg"
+              }
+              let countGrants = {
+                onStatisticField: "Recipient",
+                outStatisticFieldName: "Recipient_count",
+                statisticType: "count"
+              }
+              let query = lv.createQuery();
+              query.outStatistics = [sumGrants, avgGrants, countGrants];
+              lv.queryFeatures(query)
+                .then(function (response) {
+                  let stats = response.features[0].attributes;
+                  //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#currency_formatting
+                  document.getElementById("resultsText").innerHTML = event.srcElement.labels[0].innerText;
+                  const sum = new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(stats["Award_Amount_sum"])
+                  document.getElementById("totalAwarded").innerHTML = "Total awarded: " + sum;
+                  const avg = new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                  }).format(stats["Award_Amount_avg"])
+                  document.getElementById("avgAwarded").innerHTML = "Average award: " + avg;
+                  document.getElementById("numGrants").innerHTML = "Number of grants: " + stats["Recipient_count"].toString();
+                })
+
+
             }
-            
-            // query stats. see: https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-support-StatisticDefinition.html#statisticType
-            let sumGrants = {
-              onStatisticField: "Award_Amount",
-              outStatisticFieldName: "Award_Amount_sum",
-              statisticType: "sum"
-            }
-            let avgGrants = {
-              onStatisticField: "Award_Amount",
-              outStatisticFieldName: "Award_Amount_avg",
-              statisticType: "avg"
-            }
-            let countGrants = {
-              onStatisticField: "Recipient",
-              outStatisticFieldName: "Recipient_count",
-              statisticType: "count"
-            }
-            let query = grantsLayerView.createQuery();
-            query.outStatistics = [ sumGrants, avgGrants, countGrants ];
-            grantsLayerView.queryFeatures(query)
-              .then(function(response){
-                let stats = response.features[0].attributes;
-                //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#currency_formatting
-                document.getElementById("resultsText").innerHTML = event.srcElement.labels[0].innerText;
-                const sum = new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }).format(stats["Award_Amount_sum"])
-                document.getElementById("totalAwarded").innerHTML = "Total awarded: " + sum;
-                const avg = new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }).format(stats["Award_Amount_avg"])
-                document.getElementById("avgAwarded").innerHTML = "Average award: " + avg;
-                document.getElementById("numGrants").innerHTML = "Number of grants: " + stats["Recipient_count"].toString();
-              });
-          }
+          });
 
         }
 
-        view.whenLayerView(layer).then((layerView) => { 
-          // flash flood warnings layer loaded
-          // get a reference to the flood warnings layerview
-          grantsLayerView = layerView;
-          view.ui.add("resultsDiv", "bottom-left");
-         
-        }); 
-      });
-    </script>
-  </head>
+      }
 
-  <body>
-    
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-8 view">
-                <div id="viewDiv"></div>
-                <div id="resultsDiv" class="esri-widget">
-                  <div id="resultsText">All EJ Grants</div>
-                  <div id="totalAwarded">Total awarded: $2,427,575,579</div>
-                  <div id="avgAwarded">Average award: $7,633,885.47</div>
-                  <div id="numGrants">Number of grants: 318</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <h4>US Environmental Protection Agency Environmental Justice Grants</h4>
-                <p class="lead">Awarded under the Inflation Reduction Act</p>
+      view.ui.add("resultsDiv", "bottom-left");
 
+    });
+  </script>
+</head>
 
-                <div class="btn-group-vertical" id="grants-filter" role="group" aria-label="Vertical radio toggle button group">
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" 
-                    data-grant="All EJ Grants" autocomplete="off" checked>
-                    <label class="btn btn-secondary" for="vbtn-radio1">All EJ Grants</label>
-                    
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2" 
-                    data-grant="Environmental Justice Collaborative Problem Solving" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio2">Collaborative Problem Solving</label>
+<body>
 
-                    <!-- <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio3" 
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-8 view">
+        <div id="viewDiv"></div>
+        <div id="resultsDiv" class="esri-widget">
+          <div id="resultsText">All EJ Grants</div>
+          <div id="totalAwarded">Total awarded: $2,427,575,579</div>
+          <div id="avgAwarded">Average award: $7,633,885.47</div>
+          <div id="numGrants">Number of grants: 318</div>
+        </div>
+
+      </div>
+      <div class="col-md-4 panel">
+        <h4>US Environmental Protection Agency Environmental Justice Grants</h4>
+        <p class="lead">Awarded under the Inflation Reduction Act</p>
+
+        <p>
+          This map displays environmental justice (EJ) grants the US Environmental Protection Agency (EPA) has made
+          through the Inflation Reduction Act since 2024. The EPA Administrator <a
+            href="https://www.epa.gov/newsreleases/epa-administrator-lee-zeldin-cancels-400-grants-4th-round-cuts-doge-saving-americans"
+            target="_blank">previously announced</a> his intention to cancel many of the agency's grants and contracts
+          and their status is quickly changing: some recipients have <a
+            href="https://www.nytimes.com/2025/03/11/climate/epa-grant-recipients-funding-freeze.html"
+            target="_blank">lost access to funds</a>, received notices of termination, or find themselves uncertain of
+          their status. This map is not comprehensive and will be updated periodically as additional information becomes
+          available, but what is displayed here is a large number of the potentially affected grants. The map highlights
+          the wide-ranging and fundamental efforts that EJ entails—from upgrading aging sewer lines to workforce
+          development training, K-12 STEM education, and wildfire resilience.
+        </p>
+        <div class="btn-group-vertical" id="grants-filter" role="group" aria-label="Vertical radio toggle button group">
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" data-grant="All EJ Grants"
+            autocomplete="off" checked>
+          <label class="btn btn-secondary" for="vbtn-radio1">All EJ Grants</label>
+
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2"
+            data-grant="Environmental Justice Collaborative Problem Solving" autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio2">Collaborative Problem Solving</label>
+
+          <!-- <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio3" 
                     data-grant="Environmental Justice Collaborative Problem-Solving Cooperative Agreement Program" autocomplete="off">
                     <label class="btn btn-secondary" for="vbtn-radio3">Collaborative Problem Solving Cooperative Agreement Program</label>
- -->                    
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio4" 
-                    data-grant="Environmental Justice Community Change Grants" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio4">Community Change Grants</label>
+          -->
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio4"
+            data-grant="Environmental Justice Community Change Grants" autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio4">Community Change Grants</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio5" 
-                    data-grant="Environmental Justice Government-to-Government" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio5">Government-to-Government</label>
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio5"
+            data-grant="Environmental Justice Government-to-Government" autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio5">Government-to-Government</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio7" 
-                    data-grant="Environmental Justice Thriving Communities Grantmaking" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio7">EJ Grantmakers</label>
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio7"
+            data-grant="Environmental Justice Thriving Communities Grantmaking" autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio7">Thriving Communities Grantmaking</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio6" 
-                    data-grant="Supplemental Funding for Thriving Communities Technical Assistance Centers (TCTACs) to coordinate and collaborate with the EJ Thriving Communities Grantmakers and/or provide technical assistance to applicants and subgrantee recipients of Grantmaker program." autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio6">Thriving Communities Technical Assistance Centers (TCTACs)</label>
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio6"
+            data-grant="Supplemental Funding for Thriving Communities Technical Assistance Centers (TCTACs) to coordinate and collaborate with the EJ Thriving Communities Grantmakers and/or provide technical assistance to applicants and subgrantee recipients of Grantmaker program."
+            autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio6">Thriving Communities Technical Assistance Centers
+            (TCTACs)</label>
 
-                    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio8" 
-                    data-grant="Financial Assistance For Community Support Activities To Address Environmental Justice Issues" autocomplete="off">
-                    <label class="btn btn-secondary" for="vbtn-radio8">Financial Assistance For Community Support Activities</label>
-                    
-                </div>
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio8"
+            data-grant="Financial Assistance For Community Support Activities To Address Environmental Justice Issues"
+            autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio8">Financial Assistance For Community Support
+            Activities</label>
 
-                <div>
-                  <br><p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="https://screening-tools.com/" target="_blank">Public Environmental Data Partners</a>. The original data source for this map is archived <a href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx" target="_blank">here</a>. Some links and text may incorrectly suggest that this site is affiliated with the US Government.</p>
-                  <p>This map is not comprehensive and will be updated periodically as additional information becomes available.</p>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        About the Data
-                    </button>
-                </div>
-                
-                
-                <div class="modal" id="exampleModal" tabindex="-1">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title">About the Data</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="screening-tools.com" target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest that this site is affiliated with the US Government.</p>
-                          <p>Below is how the data are described in their original source <a href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx" target="_blank">here</a>:</p>
-
-                          <p>These data depict the primary place of performance only for select EPA projects and highlights a subset of all investments made under the Bipartisan Infrastructure Law and the Inflation Reduction Act. Both primary and sub-award information is included; however, funding amounts are not displayed for sub-awards / projects. Locations indicated here are determined using a variety of methods and may not correspond precisely to an exact, physical location. This map is not comprehensive and will be updated periodically as additional information becomes available including sub-award grant data. </p>
-        
-                            <h6>Data Caveats</h6>
-                            <ol type="1">
-                                <li>
-                                    The points on the map are an approximation of the place of performance and do not represent the full extent of where, e.g., clean school buses will be operating and where emissions benefits from these projects will accrue.  In fact, in accordance with OMB reporting requirements, grants which are associated with multiple places of performance are represented in this map by the primary place of performance as indicated by the EPA grant project officer.
-                                </li>
-                                <li>
-                                    This data visualization does not include information about regularly appropriated EPA program dollars, only EPA Bipartisan Infrastructure Law and Inflation Reduction Act funding.
-                                </li>
-                                <li>
-                                    In the case of EPA’s Office of Air & Radiation grants, it is important to note cases where the dot on the map is just an approximation: (a) Where one grant is funding the purchase of multiple vehicles, operating in multiple locations, the one dot must represent dozens of actual places of performance. For example, under the Clean School Bus program, if a third-party applicant includes 10 school districts, each funding 2 buses, the dot associated with that participant may actually represent ten distinct places of performance. (b) Similarly, for the Diesel Emissions Reduction Act (DERA), a single grant, represented by a single dot on the map could fund one crane at an airport and five heavy-duty buses, each operating in multiple counties.  (c) Additionally, the dot on the map sometimes represents the address of the grantee instead of the place of performance or where the vehicles will be operating. 
-                                </li>
-                            </ol>        
-                            <h6>Data Source Information</h6>
-                            Apart from a few programs, these data are updated daily in accordance with new award information entered into EPA's NextGen Grants Systems (NGGS). Superfund, Clean School Bus, and a few other programs have their data sourced directly from the programs on a less than daily basis.
-        
-                            <p><br>With regards to point feature placement on the map, the NGGS system offers a robust interface allowing the project officer to map the place of performance by political boundary or natural feature (such as watershed). If a grant is having benefit over multiple places of performance, a project officer must choose a primary one and for that one the centroid is used to place the point on the map. In some cases, this centroid is a fair approximation of the place of benefit but in other cases, such as with grants addressing air quality, it can largely under-represent the actual benefited areas.
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-            </div>
         </div>
-    </div>
-  </body>
-</html>
 
+
+        <div class="modal" id="exampleModal" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">About the Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="screening-tools.com"
+                    target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest
+                  that this site is affiliated with the US Government.</p>
+                <p>Below is how the data are described in their original source <a
+                    href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx"
+                    target="_blank">here</a>:</p>
+
+                <p>These data depict the primary place of performance only for select EPA projects and highlights a
+                  subset of all investments made under the Bipartisan Infrastructure Law and the Inflation Reduction
+                  Act. Both primary and sub-award information is included; however, funding amounts are not displayed
+                  for sub-awards / projects. Locations indicated here are determined using a variety of methods and may
+                  not correspond precisely to an exact, physical location. This map is not comprehensive and will be
+                  updated periodically as additional information becomes available including sub-award grant data. </p>
+
+                <h6>Data Caveats</h6>
+                <ol type="1">
+                  <li>
+                    The points on the map are an approximation of the place of performance and do not represent the full
+                    extent of where, e.g., clean school buses will be operating and where emissions benefits from these
+                    projects will accrue.  In fact, in accordance with OMB reporting requirements, grants which are
+                    associated with multiple places of performance are represented in this map by the primary place of
+                    performance as indicated by the EPA grant project officer.
+                  </li>
+                  <li>
+                    This data visualization does not include information about regularly appropriated EPA program
+                    dollars, only EPA Bipartisan Infrastructure Law and Inflation Reduction Act funding.
+                  </li>
+                  <li>
+                    In the case of EPA’s Office of Air & Radiation grants, it is important to note cases where the dot
+                    on the map is just an approximation: (a) Where one grant is funding the purchase of multiple
+                    vehicles, operating in multiple locations, the one dot must represent dozens of actual places of
+                    performance. For example, under the Clean School Bus program, if a third-party applicant includes 10
+                    school districts, each funding 2 buses, the dot associated with that participant may actually
+                    represent ten distinct places of performance. (b) Similarly, for the Diesel Emissions Reduction Act
+                    (DERA), a single grant, represented by a single dot on the map could fund one crane at an airport
+                    and five heavy-duty buses, each operating in multiple counties.  (c) Additionally, the dot on the
+                    map sometimes represents the address of the grantee instead of the place of performance or where the
+                    vehicles will be operating. 
+                  </li>
+                </ol>
+                <h6>Data Source Information</h6>
+                Apart from a few programs, these data are updated daily in accordance with new award information entered
+                into EPA's NextGen Grants Systems (NGGS). Superfund, Clean School Bus, and a few other programs have
+                their data sourced directly from the programs on a less than daily basis.
+
+                <p><br>With regards to point feature placement on the map, the NGGS system offers a robust interface
+                  allowing the project officer to map the place of performance by political boundary or natural feature
+                  (such as watershed). If a grant is having benefit over multiple places of performance, a project
+                  officer must choose a primary one and for that one the centroid is used to place the point on the map.
+                  In some cases, this centroid is a fair approximation of the place of benefit but in other cases, such
+                  as with grants addressing air quality, it can largely under-represent the actual benefited areas.
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+       <div>
+        <br>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          About the Data
+        </button>
+        <button type="button" class="btn btn-primary btn-sm">
+          Get in Touch
+        </button>
+        <small><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="https://screening-tools.com/"
+            target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest that
+          this site is affiliated with the US Government.</small>
+      </div>
+
+    </div>
+  </div>
+</body>
+
+</html>
