@@ -142,10 +142,10 @@
 
               if (selectedGrant == "All EJ Grants") {
                 lv.filter = null;
-                document.getElementById("resultsText").innerHTML = selectedGrant;
-                document.getElementById("totalAwarded").innerHTML = "Total awarded: $2,427,575,579";
-                document.getElementById("avgAwarded").innerHTML = "Average award: $7,633,885.47";
-                document.getElementById("numGrants").innerHTML = "Number of grants: 318";
+                //document.getElementById("resultsText").innerHTML = selectedGrant;
+                //document.getElementById("totalAwarded").innerHTML = "Total awarded: $2,427,575,579";
+                //document.getElementById("avgAwarded").innerHTML = "Average award: $7,633,885.47";
+                //document.getElementById("numGrants").innerHTML = "Number of grants: 318";
                 return;
               } else if (selectedGrant == "Environmental Justice Collaborative Problem Solving") {
                 let queryTitle = "Environmental Justice Collaborative%"// hack to combine two CPS grant names
@@ -161,13 +161,13 @@
               // Calculate stats see: https://developers.arcgis.com/javascript/latest/api-reference/esri-rest-support-StatisticDefinition.html#statisticType
               // Look up whether we need layerID 1 or 0 based on selectedGrant
               // First, handle when we skip
-              if ((selectedGrant.includes("Thriving")) && (lv.layer.layerId == 0)) {
+              /*if ((selectedGrant.includes("Thriving")) && (lv.layer.layerId == 0)) {
                 return;
               }
               if ((!selectedGrant.includes("Thriving")) && (!selectedGrant.includes("All EJ Grants")) && (lv.layer.layerId == 1)) {
                 return;
               }
-/*               let sumGrants = {
+               let sumGrants = {
                 onStatisticField: "Award_Amount",
                 outStatisticFieldName: "Award_Amount_sum",
                 statisticType: "sum"
