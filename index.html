@@ -83,6 +83,17 @@
 
       });
 
+      const cds = new FeatureLayer({
+        portalItem: {
+          id: "62f069ba774142b3a4eac13bd80fb4f7"
+        },
+        layerId: 0,
+        outFields: ["*"],
+
+      });
+
+      
+
       //https://developers.arcgis.com/javascript/latest/api-reference/esri-layers-GroupLayer.html
       const AllEJGrants = new GroupLayer({
         title: "All EJ Grants",
@@ -91,7 +102,7 @@
       });
 
       const map = new Map({
-        layers: [AllEJGrants],
+        layers: [cds, AllEJGrants],
         basemap: "gray-vector",
       });
 
@@ -289,7 +300,17 @@
           <label class="btn btn-secondary" for="vbtn-radio8">Financial Assistance For Community Support
             Activities</label>
 
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio9"
+            data-grant="Small Grants Program"
+            autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio9">Small Grants Program</label>
 
+          <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio10"
+            data-grant="Surveys, Studies, Investigations, Training and Special Purpose Activities"
+            autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio10">Surveys, Studies, Investigations, Training and Special Purpose Activities</label>
+            
+            
 
         </div>
 
