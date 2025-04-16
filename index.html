@@ -305,9 +305,22 @@
                 <p><b>This is an unofficial copy of EPA data</b>, hosted by the <a href="screening-tools.com"
                     target="_blank">Public Environmental Data Partners</a>. Some links and text may incorrectly suggest
                   that this site is affiliated with the US Government.</p>
-                <p>Below is how the data are described in their original source <a
+                
+                  <h5>Methodology</h5>
+                  <ul>
+                    <li>We acquired <a href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx"  target="_blank">a list of EPA grants made under IRA here</a> and filtered them to environmental justice (EJ) programs. This resulted in ~315 grants.</li>
+                    <li>We then joined this with a list of grants EPA made available to the Senate Environment and Public Works (EPW) committee regarding which grants it <a href="https://www.epw.senate.gov/public/index.cfm?a=files.serve&amp;File_id=61A69D51-B02F-4C32-8B35-8617C7AF274D" target="_blank">intends to cancel</a> The EPW list contains additional information about the financial status of each grant, including amount of funding remaining.</li>
+                    <li>After joining the two, we arrived at a full list of 510 grants. We &quot;geocoded&quot; the additional ~200 grants from the EPW list, meaning we searched for the street address of each grant recipient organization and then translated addresses into latitude and longitude coordinates. This automated process initially produced some errors, which we attempted to correct manually. It is important to note that each point on the map represents a &quot;place of performance&quot; where a grant recipient organization is headquartered, which is not necessarily the community where the funding would be spent (see below).</li>
+                    <li>From here, we removed grants with $0 remaining to be allocated, except for 2 grants with $0 but with award dates post-inauguration, in February 2025</li>
+                    <li>We also removed grants described as &quot;financially closed&quot; and with award dates prior to the start of the second Trump administration.</li>
+                    <li>This left us with 398 grants, 82 of which originated from the list released to EPW</li>
+                    <li>While the initial list of ~315 grants included project descriptions, those from the EPW list did not. We used the <a href="https://colab.research.google.com/drive/1NaDZN4iTNXqCW93EOucz10v3CEPXJ2Ct"  target="_blank">usaspending.gov API</a> to look up project descriptions for these. In the process of doing so, we corrected 3 grant IDs that had been improperly digitized from the screenshots EPA shared with EPW.</li>
+                  </ul>
+                
+                <h5>Data description</h5>
+                <p>Records of grants made under the Inflation Reduction Act are described in their original source <a
                     href="https://web.archive.org/web/20250201063949/https://dmap-data-commons-oms.s3.amazonaws.com/EF/GIS/Investing_in_America_Map_Data.xlsx"
-                    target="_blank">here</a>:</p>
+                    target="_blank">as follows</a>:</p>
 
                 <p>These data depict the primary place of performance only for select EPA projects and highlights a
                   subset of all investments made under the Bipartisan Infrastructure Law and the Inflation Reduction
