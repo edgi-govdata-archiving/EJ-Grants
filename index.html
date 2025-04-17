@@ -63,8 +63,10 @@
       "esri/widgets/Expand",
       "esri/core/reactiveUtils",
       "esri/widgets/Search",
-      "esri/widgets/Popup"
-    ], (MapView, Map, FeatureLayer, GroupLayer, Expand, reactiveUtils, Search, Popup) => {
+      "esri/widgets/Popup",
+      "esri/renderers/SimpleRenderer",
+      "esri/symbols/SimpleFillSymbol"
+    ], (MapView, Map, FeatureLayer, GroupLayer, Expand, reactiveUtils, Search, Popup, SimpleRenderer, SimpleFillSymbol) => {
 
       const otherej = new FeatureLayer({
         portalItem: {
@@ -84,12 +86,14 @@
 
       });
 
-      // Define a pop-up for CDS
+      // Define a pop-up for CDs
       const popupCDS = {
           title: "Congressional District {DISTRICT}",
           content:
             "<b>Repesentative:</b> {FIRSTNAME} {LASTNAME}<br><b>Party:</b> {PARTY}<br><b>Website:</b> <a href='{WEBSITEURL}' target='_blank'>{WEBSITEURL}</a>"      
           };
+      // Style CDs
+
       const cds = new FeatureLayer({
         portalItem: {
           id: "62f069ba774142b3a4eac13bd80fb4f7"
@@ -97,6 +101,12 @@
         layerId: 0,
         outFields: ["*"],
         popupTemplate: popupCDS
+      });
+      cds.renderer = new SimpleRenderer({
+        symbol: new SimpleFillSymbol({
+          color: "rgba(0,76,115,0.04)",
+          outline: {"color":"black", "width":.25}
+        })
       });
 
       
@@ -150,13 +160,10 @@
       contextElement.addEventListener("click", filterByContext);
 
       function filterByContext(event) {
-        console.log(event)
-        console.log(cds)
         const selectedContext = event.target.getAttribute("data-context");
         if (selectedContext){
           if (cds.visible == false){
             cds.visible = true;
-            console.log(cds.visible)
           } else {
             cds.visible = false;
           }
@@ -291,8 +298,10 @@
           development training, K-12 STEM education, and wildfire resilience. As the Center for American Progress <a href="https://www.americanprogress.org/article/the-trump-administrations-cancellation-of-funding-for-environmental-protections-endangers-americans-health-while-draining-their-wallets/" target="_blank">puts it</a>, "Denying states, cities, and communities across the country funds to implement projects that reduce pollution and energy costs and protect them from more extreme weather puts Americans’ health and jobs at risk while driving up household energy bills." Expected outcomes from the grants include: 
         </p>
         <div id="outcomes"></div>
+        <div class="row">
+        <div class="col-xl-6 col-lg-6">
         <div><h6>Select a type of EJ grant to show on the map:</h6></div>
-        <div class="btn-group-vertical" id="grants-filter" role="group" aria-label="Vertical radio toggle button group">
+        <div class="btn-group-vertical btn-group-sm" id="grants-filter" role="group" aria-label="Vertical radio toggle button group">
           <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" data-grant="All EJ Grants"
             autocomplete="off" checked>
           <label class="btn btn-secondary" for="vbtn-radio1">All EJ Grants</label>
@@ -340,16 +349,18 @@
           <label class="btn btn-secondary" for="vbtn-radio10">Surveys, Studies, Investigations, Training and Special Purpose Activities</label>
 
         </div>
-        
+        </div>
+        <div class="col-xl-6 col-lg-6">
         <div><h6>Select context to add to the map:</h6></div>
-        <div class="btn-group-vertical" id="context-filter" role="group" aria-label="Vertical radio toggle button group">
+        <div class="btn-group-vertical btn-group-sm" id="context-filter" role="group" aria-label="Vertical radio toggle button group">
         
           <input type="checkbox" class="btn-check" name="vbtn-radiox" id="vbtn-radio11"
             data-context="Congressional Districts"
             autocomplete="off">
           <label class="btn btn-secondary" for="vbtn-radio11">Congressional Districts</label>
         </div>
-
+        </div>
+        </div>
         <div class="modal" id="aboutModal" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
