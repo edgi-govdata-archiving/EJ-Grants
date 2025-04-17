@@ -62,8 +62,9 @@
       "esri/layers/GroupLayer",
       "esri/widgets/Expand",
       "esri/core/reactiveUtils",
-      "esri/widgets/Search"
-    ], (MapView, Map, FeatureLayer, GroupLayer, Expand, reactiveUtils, Search) => {
+      "esri/widgets/Search",
+      "esri/widgets/Popup"
+    ], (MapView, Map, FeatureLayer, GroupLayer, Expand, reactiveUtils, Search, Popup) => {
 
       const otherej = new FeatureLayer({
         portalItem: {
@@ -83,13 +84,19 @@
 
       });
 
+      // Define a pop-up for CDS
+      const popupCDS = {
+          title: "Congressional District {DISTRICT}",
+          content:
+            "<b>Repesentative:</b> {FIRSTNAME} {LASTNAME}<br><b>Party:</b> {PARTY}<br><b>Website:</b> <a href='{WEBSITEURL}' target='_blank'>{WEBSITEURL}</a>"      
+          };
       const cds = new FeatureLayer({
         portalItem: {
           id: "62f069ba774142b3a4eac13bd80fb4f7"
         },
         layerId: 0,
         outFields: ["*"],
-
+        popupTemplate: popupCDS
       });
 
       
@@ -105,6 +112,7 @@
         layers: [cds, AllEJGrants],
         basemap: "gray-vector",
       });
+      cds.visible=false;
 
       const view = new MapView({
         map: map,
@@ -137,9 +145,25 @@
         index: 0
       });
 
+          // CONTEXT FILTER
+      const contextElement = document.getElementById("context-filter");
+      contextElement.addEventListener("click", filterByContext);
 
+      function filterByContext(event) {
+        console.log(event)
+        console.log(cds)
+        const selectedContext = event.target.getAttribute("data-context");
+        if (selectedContext){
+          if (cds.visible == false){
+            cds.visible = true;
+            console.log(cds.visible)
+          } else {
+            cds.visible = false;
+          }
+        }
+      }
 
-      // click event handler 
+      // GRANT FILTER
       const grantsElement = document.getElementById("grants-filter");
       grantsElement.addEventListener("click", filterByGrant);
 
@@ -150,8 +174,11 @@
         if (selectedGrant) { // handle null events happening
 
           view.allLayerViews.forEach((lv) => {
+            console.log(lv)
             if (lv.layer.type === "feature") {
-
+              if (lv._lastAvailableFields[3]=="CD119FP"){
+                return;
+              } //CDs
               if (selectedGrant == "All EJ Grants") {
                 lv.filter = null;
                 //document.getElementById("resultsText").innerHTML = selectedGrant;
@@ -225,6 +252,8 @@
       //view.ui.add("resultsDiv", "bottom-left");
 
     });
+      
+
   </script>
 </head>
 
@@ -309,11 +338,17 @@
             data-grant="Surveys, Studies, Investigations, Training and Special Purpose Activities"
             autocomplete="off">
           <label class="btn btn-secondary" for="vbtn-radio10">Surveys, Studies, Investigations, Training and Special Purpose Activities</label>
-            
-            
 
         </div>
-
+        
+        <div><h6>Select context to add to the map:</h6></div>
+        <div class="btn-group-vertical" id="context-filter" role="group" aria-label="Vertical radio toggle button group">
+        
+          <input type="checkbox" class="btn-check" name="vbtn-radiox" id="vbtn-radio11"
+            data-context="Congressional Districts"
+            autocomplete="off">
+          <label class="btn btn-secondary" for="vbtn-radio11">Congressional Districts</label>
+        </div>
 
         <div class="modal" id="aboutModal" tabindex="-1">
           <div class="modal-dialog">
